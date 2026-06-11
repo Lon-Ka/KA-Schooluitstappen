@@ -296,6 +296,8 @@ const CONFIG = {
     gebruikers:   '9999c86b-8b1e-4c99-a41b-85d965b5292d',
     instellingen: 'd71ecbe2-574c-498e-818c-55667a9161c0'
   }
+,
+  beheerders:  ['ict@gebaska.be']  // ICT-beheerders: toegang tot alle scholen
 };
 // ════════════════════════════════════════════════════════════════
 
@@ -410,6 +412,7 @@ const spFields  = (listId, id) => spBase() + listId + '/items/' + id + '/fields'
 let S = {
   view: 'loading',     // loading | error | login-prompt | school-pick | app
   loginError: null,
+  isBeheerder: false,
   errorMsg: '',
   userEmail: '',
   userDisplayName: '',
@@ -1297,6 +1300,13 @@ function renderSettings() {
       '<div class="cl-add-row" style="display:flex"><input id="kn-new" placeholder="Nieuwe klasnaam..."><button class="btn btn-primary btn-sm" onclick="addKlasnaam()">+ Toevoegen</button></div>'+
       '<div style="margin-top:8px"><button class="btn btn-ghost btn-sm" onclick="resetKlasnamen()">&#8635; Standaard herstellen</button></div>'+
     '</div>'+
+    '<div class="card"><div class="card-title">&#128272; Beheerders</div>'+
+      '<p style="font-size:13px;color:#888;margin-bottom:12px">Beheerders hebben automatisch toegang tot alle scholen met directierechten. Wijzigingen worden pas actief na een code-update door de ICT-coördinator.</p>'+
+      '<div style="padding:10px;background:#F3F4F6;border-radius:8px;font-size:13px">'+
+        (CONFIG.beheerders||[]).map(e=>'<div style="display:flex;align-items:center;gap:8px;padding:4px 0">&#128100; '+esc(e)+'</div>').join('')+
+      '</div>'+
+      '<p style="font-size:11px;color:#9CA3AF;margin-top:8px">Wil je beheerders wijzigen? Neem contact op met ICT (Wim Cools) om de config aan te passen.</p>'+
+    '</div>'+
     '<div class="card"><div class="card-title">&#127979; Klasnamen per school</div>'+
       '<p style="font-size:13px;color:#888;margin-bottom:14px">Stel per school de klasnamen in die leerkrachten kunnen selecteren.</p>'+
       Object.values(SCHOOLS).map(sc => {
@@ -1695,6 +1705,12 @@ async function boot() {
       S.userEmail       = account.username;
       S.userDisplayName = account.name || account.username;
       S.view = 'app-loading'; render();
+      // Beheerders krijgen automatisch toegang tot alle scholen
+      if ((CONFIG.beheerders||[]).map(e=>e.toLowerCase()).includes(S.userEmail.toLowerCase())) {
+        S.isBeheerder = true;
+        S.userScholen = Object.values(SCHOOLS).map(sc=>({ school:sc.naam, rol:'directie', spId:null }));
+        S.view='school-pick'; render(); return;
+      }
       const data = await graphGet(spItems(CONFIG.lijstIds.gebruikers));
       const rows = (data.value||[]).filter(i=>i.fields&&i.fields.Title===S.userEmail&&i.fields.School&&i.fields.Rol);
       if (!rows.length) { S.view='not-found'; render(); return; }
