@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<title>KA-Schooluitstappen — Setup-instructies</title>
+<style>
+  body { font-family: Arial, sans-serif; max-width: 860px; margin: 40px auto; color: #374151; line-height: 1.7; }
+  h1 { color: #0F6E56; border-bottom: 3px solid #0F6E56; padding-bottom: 8px; }
+  h2 { color: #374151; margin-top: 32px; }
+  h3 { color: #0F6E56; margin-top: 20px; }
+  .step { background: #E1F5EE; border-left: 4px solid #0F6E56; padding: 12px 16px; margin: 12px 0; border-radius: 0 8px 8px 0; }
+  .step strong { color: #085041; }
+  .warn { background: #FFF8ED; border-left: 4px solid #D97706; padding: 12px 16px; margin: 12px 0; border-radius: 0 8px 8px 0; }
+  code { background: #F3F4F6; padding: 2px 6px; border-radius: 4px; font-family: monospace; font-size: 13px; }
+  pre { background: #1A2E25; color: #E1F5EE; padding: 16px; border-radius: 8px; overflow-x: auto; font-size: 13px; }
+  table { border-collapse: collapse; width: 100%; margin: 16px 0; }
+  th { background: #0F6E56; color: white; padding: 8px 12px; text-align: left; }
+  td { padding: 8px 12px; border-bottom: 1px solid #E5E5DF; }
+  tr:nth-child(even) td { background: #F3F4F6; }
+  .badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; }
+  .new { background: #E1F5EE; color: #085041; }
+  .existing { background: #F3F4F6; color: #6B7280; }
+</style>
+</head>
+<body>
+<h1>🚌 KA-Schooluitstappen — Setup-instructies</h1>
+<p>Stap-voor-stap handleiding voor de IT-beheerder om de app in te richten.</p>
+
+<h2>Overzicht</h2>
+<table>
+  <tr><th>Component</th><th>Waarde</th></tr>
+  <tr><td>GitHub repo</td><td><code>lon-ka/KA-Schooluitstappen</code></td></tr>
+  <tr><td>GitHub Pages URL</td><td><code>https://lon-ka.github.io/KA-Schooluitstappen/</code></td></tr>
+  <tr><td>Azure AD tenant</td><td><code>gebaskabe</code></td></tr>
+  <tr><td>Client-ID</td><td><code>558c46ee-b4cb-4827-9313-6e10efc43a6d</code></td></tr>
+  <tr><td>Tenant-ID</td><td><code>165074eb-b8b7-49e8-a9b4-54cac7939ed2</code></td></tr>
+  <tr><td>SharePoint site</td><td><code>https://gebaskabe.sharepoint.com/sites/Schooluitstappen</code></td></tr>
+</table>
+
+<h2>Stap 1 — GitHub repository aanmaken</h2>
+<div class="step"><strong>1.</strong> Ga naar <code>https://github.com/lon-ka</code> → <strong>New repository</strong></div>
+<div class="step"><strong>2.</strong> Naam: <code>KA-Schooluitstappen</code> | Visibility: <strong>Public</strong> | Add README: ✓</div>
+<div class="step"><strong>3.</strong> Hernoem <code>KA-Schooluitstappen.html</code> naar <code>index.html</code> en push naar de <code>main</code> branch</div>
+<div class="step"><strong>4.</strong> Ga naar <em>Settings → Pages → Source: main branch / root</em> → Save</div>
+<div class="step"><strong>5.</strong> Wacht ~2 minuten, daarna bereikbaar op <code>https://lon-ka.github.io/KA-Schooluitstappen/</code></div>
+
+<h2>Stap 2 — Azure AD app-registratie bijwerken</h2>
+<div class="step"><strong>1.</strong> Ga naar <code>https://entra.microsoft.com</code> → App-registraties → <strong>Schooluitstappen</strong></div>
+<div class="step"><strong>2.</strong> Verificatie → <strong>+ URI toevoegen</strong> (onder SPA-platform)</div>
+<div class="step"><strong>3.</strong> Voeg toe: <code>https://lon-ka.github.io/KA-Schooluitstappen/</code></div>
+<div class="step"><strong>4.</strong> Klik <strong>Opslaan</strong></div>
+
+<h2>Stap 3 — SharePoint-lijsten controleren</h2>
+<p>Ga naar <code>https://gebaskabe.sharepoint.com/sites/Schooluitstappen</code> en controleer of alle kolommen aanwezig zijn:</p>
+
+<h3>Lijst: Uitstappen</h3>
+<table>
+  <tr><th>Kolomnaam</th><th>Type</th><th>Status</th></tr>
+  <tr><td>Title</td><td>Eén regel tekst</td><td><span class="badge existing">Standaard</span></td></tr>
+  <tr><td>Klas</td><td>Eén regel tekst</td><td><span class="badge existing">Bestaand</span></td></tr>
+  <tr><td>Datum</td><td>Eén regel tekst</td><td><span class="badge existing">Bestaand</span></td></tr>
+  <tr><td>Aanvrager, School, Plaats, Adres</td><td>Eén regel tekst</td><td><span class="badge existing">Bestaand</span></td></tr>
+  <tr><td>ContactBest, ContactV</td><td>Eén regel tekst</td><td><span class="badge existing">Bestaand</span></td></tr>
+  <tr><td>AantalLln, AantalLkr, ExtraBeg, Begeleiders</td><td>Getal / tekst</td><td><span class="badge existing">Bestaand</span></td></tr>
+  <tr><td>VertrekSchool, VertrekBest</td><td>Eén regel tekst</td><td><span class="badge existing">Bestaand</span></td></tr>
+  <tr><td>Inkom, Gids, PrijsGids</td><td>Eén regel tekst</td><td><span class="badge existing">Bestaand</span></td></tr>
+  <tr><td>Vervoer, Busmaatschappij, Maxfact</td><td>Eén regel tekst</td><td><span class="badge existing">Bestaand</span></td></tr>
+  <tr><td>Lunch, Drankje</td><td>Ja/Nee</td><td><span class="badge existing">Bestaand</span></td></tr>
+  <tr><td>CommOuders, Opmerking</td><td>Eén regel tekst</td><td><span class="badge existing">Bestaand</span></td></tr>
+  <tr><td>Status, Aangemaakt, Tijdlijn</td><td>Tekst / datum</td><td><span class="badge existing">Bestaand</span></td></tr>
+  <tr><td>TypeUitstap, Schooljaar, Leerjaar, Categorie</td><td>Eén regel tekst</td><td><span class="badge existing">Bestaand</span></td></tr>
+  <tr><td>Busprijs, MaaltijdType, MaaltijdPrijs</td><td>Eén regel tekst</td><td><span class="badge existing">Bestaand</span></td></tr>
+  <tr><td>DrankjePrijs, BijdrageOC</td><td>Eén regel tekst</td><td><span class="badge existing">Bestaand</span></td></tr>
+  <tr><td>AfmeldenSchoolmaaltijd</td><td>Eén regel tekst</td><td><span class="badge existing">Bestaand</span></td></tr>
+</table>
+
+<h3>Lijst: Instellingen</h3>
+<table>
+  <tr><th>Kolomnaam</th><th>Type</th><th>Status</th></tr>
+  <tr><td>Title</td><td>Eén regel tekst</td><td><span class="badge existing">Standaard</span></td></tr>
+  <tr><td>NoodDir, NoodSec</td><td>Eén regel tekst</td><td><span class="badge existing">Bestaand</span></td></tr>
+  <tr><td>Checklist, Limieten, Klasnamen</td><td>Meerdere regels tekst</td><td><span class="badge existing">Bestaand</span></td></tr>
+  <tr><td>SchoolKlasConfig</td><td>Meerdere regels tekst</td><td><span class="badge new">Controleer / nieuw</span></td></tr>
+</table>
+
+<h3>Lijst: Gebruikers</h3>
+<table>
+  <tr><th>Kolomnaam</th><th>Type</th><th>Opmerking</th></tr>
+  <tr><td>Title</td><td>Eén regel tekst</td><td>E-mailadres van de gebruiker (exact)</td></tr>
+  <tr><td>School</td><td>Eén regel tekst</td><td>'t Mulderke / Het Kiezeltje / De Kei</td></tr>
+  <tr><td>Rol</td><td>Eén regel tekst</td><td>leerkracht / secretariaat / directie</td></tr>
+</table>
+
+<h2>Stap 4 — Gebruikers toevoegen</h2>
+<p>Voeg elke gebruiker toe in de <strong>Gebruikers</strong>-lijst:</p>
+<pre>Title:  voornaam.naam@gebaska.be   (exact Microsoft 365-adres)
+School: 't Mulderke                 (of Het Kiezeltje / De Kei)
+Rol:    leerkracht                  (of secretariaat / directie)</pre>
+<div class="warn">⚠️ Leerkracht op meerdere scholen? Voeg meerdere rijen toe — één per school.</div>
+
+<h2>Stap 5 — Testen</h2>
+<div class="step"><strong>1.</strong> Ga naar <code>https://lon-ka.github.io/KA-Schooluitstappen/</code></div>
+<div class="step"><strong>2.</strong> Klik <strong>Aanmelden met Microsoft 365</strong></div>
+<div class="step"><strong>3.</strong> Meld aan met je schoolaccount</div>
+<div class="step"><strong>4.</strong> Dashboard moet openen met je school en rol rechtsboven</div>
+
+<h2>Instellingen na eerste aanmelding</h2>
+<div class="step">Ga als directie of secretariaat naar <strong>⚙️ Instellingen</strong> en vul in:<br>
+• Noodnummers (directie + secretariaat)<br>
+• Klasnamen per school worden automatisch geladen vanuit de standaardconfiguratie</div>
+
+<hr>
+<p style="color: #9CA3AF; font-size: 12px; text-align: center;">KA-Schooluitstappen | Gebaska Kapelle-op-den-Bos | ICT-coördinator: Wim Cools</p>
+</body>
+</html>
