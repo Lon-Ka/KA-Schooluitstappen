@@ -228,6 +228,45 @@ if (window.self === window.top) {
     });
 }
 </script>
+<script>
+if (window.self === window.top) {
+  document.addEventListener('DOMContentLoaded', function() {
+    document.body.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;
+                  height:100vh;font-family:'Segoe UI',sans-serif;background:#F5F7FA;text-align:center;padding:20px;">
+        <svg width="64" height="64" viewBox="0 0 64 64" fill="none" style="margin-bottom:24px;">
+          <rect width="64" height="64" rx="16" fill="#0F1D2E"/>
+          <rect x="12" y="12" width="16" height="16" rx="4" fill="#1A6BB5"/>
+          <rect x="36" y="12" width="16" height="16" rx="4" fill="#2E8B57"/>
+          <rect x="12" y="36" width="16" height="16" rx="4" fill="#C05A1A"/>
+          <rect x="36" y="36" width="16" height="16" rx="4" fill="#6B7A8D"/>
+        </svg>
+        <h2 style="margin:0 0 8px;font-size:1.4rem;color:#1C2B3A;">Toegang via portaal vereist</h2>
+        <p style="margin:0 0 28px;color:#6B7A8D;max-width:360px;line-height:1.5;">
+          Deze applicatie is enkel beschikbaar via het MijnDigiKAntoor portaal.
+        </p>
+        <a href="https://lon-ka.github.io/KA-portaal/"
+           style="display:inline-flex;align-items:center;gap:10px;padding:14px 28px;
+                  background:#0F1D2E;color:#fff;text-decoration:none;border-radius:10px;font-weight:600;">
+          Naar MijnDigiKAntoor
+        </a>
+      </div>`;
+  });
+}
+</script>
+<script>
+window._portalToken = null;
+window._portalEmail = '';
+window._appBooted = false;
+window.addEventListener('message', function(event) {
+  if (event.origin !== 'https://lon-ka.github.io') return;
+  if (!event.data || event.data.type !== 'MSAL_TOKEN') return;
+  if (window._portalToken) return;
+  window._portalToken = event.data.token;
+  window._portalEmail = event.data.email || '';
+  if (!window._appBooted) boot();
+});
+</script>
 </head>
 <body>
 
@@ -330,6 +369,7 @@ const CONFIG = {
     instellingen: 'd71ecbe2-574c-498e-818c-55667a9161c0'
   }
 ,
+  redirectUri: 'https://lon-ka.github.io/KA-Schooluitstappen/',
   beheerders:  ['ict@gebaska.be']  // ICT-beheerders: toegang tot alle scholen
 };
 // ════════════════════════════════════════════════════════════════
@@ -383,29 +423,28 @@ const LEERJAREN   = ['KK0','1KK','2KK','3KK','1L','2L','3L','4L','5L','6L'];
 const TODAY = new Intl.DateTimeFormat('nl-BE', { day:'numeric', month:'short', year:'numeric' }).format(new Date());
 
 // ─── MSAL setup ───────────────────────────────────────────────────────────────
-const msalConfig = {
+const msalApp = new msal.PublicClientApplication({
   auth: {
     clientId:    CONFIG.clientId,
-    authority:   'https://login.microsoftonline.com/' + CONFIG.tenantId,
-    redirectUri: 'https://lon-ka.github.io/KA-Schooluitstappen/'
+    authority:   `https://login.microsoftonline.com/${CONFIG.tenantId}`,
+    redirectUri: CONFIG.redirectUri
   },
-  cache:  { cacheLocation: 'localStorage' },
-  system: { allowRedirectInIframe: true }
-};
-
-let msalInstance;
-const graphScopes = { scopes: ['User.Read', 'Sites.ReadWrite.All'] };
+  cache: { cacheLocation: 'localStorage', storeAuthStateInCookie: false }
+});
+const SCOPES = ['User.Read', 'Sites.ReadWrite.All'];
+const graphScopes = { scopes: SCOPES };
 
 // ─── Graph API helpers ────────────────────────────────────────────────────────
 async function getToken() {
-  const accounts = msalInstance.getAllAccounts();
-  if (!accounts.length) throw new Error('Niet aangemeld');
+  if (window._portalToken) return window._portalToken;
+  const accounts = msalApp.getAllAccounts();
+  if (!accounts.length) return null;
   try {
-    const res = await msalInstance.acquireTokenSilent({ ...graphScopes, account: accounts[0] });
-    return res.accessToken;
-  } catch (e) {
-    if(window.self !== window.top){ showError('Sessie verlopen. Sluit dit venster en meld opnieuw aan via het portaal.'); return null; }
-        await msalInstance.acquireTokenRedirect({ ...graphScopes, account: accounts[0] });
+    const r = await msalApp.acquireTokenSilent({ scopes: SCOPES, account: accounts[0] });
+    return r.accessToken;
+  } catch(e) {
+    if (window.self !== window.top) { showError('Sessie verlopen. Meld opnieuw aan via het portaal.'); return null; }
+    await msalApp.acquireTokenRedirect({ scopes: SCOPES, account: accounts[0] });
     return null;
   }
 }
@@ -1631,8 +1670,8 @@ async function addSetItem() {
 // ─── Auth & boot ──────────────────────────────────────────────────────────────
 async function doLogin() {
   S.view='loading'; render();
-  const loginResult = await msalInstance.loginPopup(graphScopes);
-    msalInstance.setActiveAccount(loginResult.account);
+  const loginResult = await msalApp.loginRedirect(graphScopes);
+    msalApp.setActiveAccount(loginResult.account);
 }
 
 async function doLogout() {
@@ -1640,8 +1679,8 @@ async function doLogout() {
     _localSchool = null; S.school=null; S.rol=null; S.trips=[];
     S.cfg={}; S.view='local-login'; render(); return;
   }
-  const accounts=msalInstance.getAllAccounts();
-  if (accounts.length) await msalInstance.logoutRedirect({ account: accounts[0] });
+  const accounts=msalApp.getAllAccounts();
+  if (accounts.length) await msalApp.logoutRedirect({ account: accounts[0] });
   S.view='loading'; S.school=null; S.rol=null; S.trips=[]; render(); location.reload();
 }
 
@@ -1694,7 +1733,7 @@ async function doMsalLogin() {
   S.view = 'loading'; render();
   try {
     if(window.self !== window.top){ document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;text-align:center;padding:20px;"><div><p style="font-size:1rem;color:#333;">Sessie verlopen.</p><p style="font-size:.85rem;color:#666;">Meld opnieuw aan via het MijnDigiKAntoor portaal.</p></div></div>'; return; }
-        await msalInstance.loginRedirect(graphScopes);
+        await msalApp.loginRedirect(graphScopes);
   } catch(e) {
     console.error('Login fout:', e);
     S.loginError = e.message || 'Aanmelden mislukt. Probeer opnieuw.';
@@ -1702,6 +1741,28 @@ async function doMsalLogin() {
   }
 }
 
+
+function showError(msg) {
+  S.view = 'error';
+  S.errorMsg = msg;
+  render();
+}
+
+function showView(v) {
+  S.view = v;
+  render();
+}
+
+async function login() {
+  if (window.self !== window.top) { showError('Sessie verlopen. Meld opnieuw aan via het portaal.'); return; }
+  try { await msalApp.loginRedirect(graphScopes); }
+  catch(e) { showError('Aanmelden mislukt: ' + e.message); }
+}
+
+async function logout() {
+  const accounts = msalApp.getAllAccounts();
+  if (accounts.length) await msalApp.logoutRedirect({ account: accounts[0], postLogoutRedirectUri: CONFIG.redirectUri });
+}
 async function boot() {
   console.log('[Schooluitstappen] boot() gestart, protocol:', window.location.protocol, 'isConfigured:', isConfigured);
   // ── Lokale modus: CONFIG niet ingevuld → werkt zonder M365 via localStorage ──
@@ -1715,20 +1776,25 @@ async function boot() {
   }
 
   // ── M365 modus ───────────────────────────────────────────────────────────────
-  S.view = 'loading'; render(); // toon laadscherm
-  console.log('[Schooluitstappen] M365 modus gestart');
+  S.view = 'loading'; render();
   try {
-    msalInstance = new msal.PublicClientApplication(msalConfig);
-    await msalInstance.initialize();
-
-    // Verwerk redirect-resultaat na terugkeer van Microsoft-aanmeldpagina
-    const redirectResult = await msalInstance.handleRedirectPromise();
+    await msalApp.initialize();
+    const redirectResult = await msalApp.handleRedirectPromise();
     if (redirectResult?.account) {
-      msalInstance.setActiveAccount(redirectResult.account);
+      msalApp.setActiveAccount(redirectResult.account);
     }
 
-    let account = msalInstance.getActiveAccount() || msalInstance.getAllAccounts()[0];
+    // Portaal token bridge
+    if (window._portalToken) {
+      S.userEmail = window._portalEmail || '';
+      S.userDisplayName = S.userEmail;
+      await _bootLoadUser(S.userEmail);
+      return;
+    }
+
+    let account = msalApp.getActiveAccount() || msalApp.getAllAccounts()[0];
     if (!account) {
+      if (window.self !== window.top) { showError('Geen sessie gevonden. Meld aan via het MijnDigiKAntoor portaal.'); return; }
       S.loginError = null;
       S.view = 'login-prompt';
       render();
@@ -1756,7 +1822,7 @@ async function boot() {
       return;
     }
 
-    msalInstance.setActiveAccount(account);
+    msalApp.setActiveAccount(account);
     S.userEmail = account.username;
     S.userDisplayName = account.name || account.username;
 
@@ -1780,6 +1846,22 @@ async function boot() {
   }
 }
 
+
+async function _bootLoadUser(email) {
+  if ((CONFIG.beheerders||[]).map(e=>e.toLowerCase()).includes(email.toLowerCase())) {
+    S.isBeheerder = true;
+    S.userScholen = Object.values(SCHOOLS).map(sc=>({ school:sc.naam, rol:'directie', spId:null }));
+    S.view='school-pick'; render(); window._appBooted = true; return;
+  }
+  const data = await graphGet(spItems(CONFIG.lijstIds.gebruikers));
+  const rows = (data.value||[]).filter(i=>i.fields&&i.fields.Title===email&&i.fields.School&&i.fields.Rol);
+  if (!rows.length) { S.view='not-found'; render(); return; }
+  S.userScholen = rows.map(i=>({ school:i.fields.School, rol:i.fields.Rol, spId:i.id }));
+  if (S.userScholen.length===1) {
+    await pickSchool(S.userScholen[0].school, S.userScholen[0].rol, S.userScholen[0].spId);
+  } else { S.view='school-pick'; render(); }
+  window._appBooted = true;
+}
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', boot);
 } else {
