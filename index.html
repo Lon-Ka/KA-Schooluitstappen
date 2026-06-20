@@ -221,16 +221,53 @@ input, select, textarea, button { font-family: inherit; }
 .help-footer{padding:.75rem 1.25rem;border-top:1px solid #E8E5DC;font-size:11px;color:#AAA;flex-shrink:0;text-align:center}
 </style>
 <script>
+// Verplicht gebruik via MijnDigiKAntoor portaal
+if (window.self === window.top) {
+    document.addEventListener('DOMContentLoaded', function() {
+        document.body.innerHTML = `
+            <div style="display:flex; flex-direction:column; align-items:center;
+                        justify-content:center; height:100vh; font-family:'Segoe UI',sans-serif;
+                        background:#F5F7FA; text-align:center; padding:20px;">
+                <svg width="64" height="64" viewBox="0 0 64 64" fill="none" style="margin-bottom:24px;">
+                    <rect width="64" height="64" rx="16" fill="#0F1D2E"/>
+                    <rect x="12" y="12" width="16" height="16" rx="4" fill="#1A6BB5"/>
+                    <rect x="36" y="12" width="16" height="16" rx="4" fill="#2E8B57"/>
+                    <rect x="12" y="36" width="16" height="16" rx="4" fill="#C05A1A"/>
+                    <rect x="36" y="36" width="16" height="16" rx="4" fill="#6B7A8D"/>
+                </svg>
+                <h2 style="margin:0 0 8px; font-size:1.4rem; color:#1C2B3A;">
+                    Toegang via portaal vereist
+                </h2>
+                <p style="margin:0 0 28px; color:#6B7A8D; max-width:360px; line-height:1.5;">
+                    Deze applicatie is enkel beschikbaar via het MijnDigiKAntoor portaal.
+                </p>
+                <a href="https://lon-ka.github.io/KA-portaal/"
+                   style="display:inline-flex; align-items:center; gap:10px;
+                          padding:14px 28px; background:#0F1D2E; color:#fff;
+                          text-decoration:none; border-radius:10px; font-weight:600;
+                          font-size:.95rem;">
+                    Naar MijnDigiKAntoor
+                </a>
+            </div>`;
+    });
+}
+</script>
+
+<script>
 window._portalToken = null;
 window._portalEmail = '';
 window._appBooted = false;
-window.addEventListener('message', function(event) {
-  if (event.origin !== 'https://lon-ka.github.io') return;
-  if (!event.data || event.data.type !== 'MSAL_TOKEN') return;
-  if (window._portalToken) return;
-  window._portalToken = event.data.token;
-  window._portalEmail = event.data.email || '';
-  if (!window._appBooted) boot();
+document.addEventListener('DOMContentLoaded', function() {
+  window.addEventListener('message', function(event) {
+    if (event.origin !== 'https://lon-ka.github.io') return;
+    if (!event.data) return;
+    if (event.data.type === 'OPEN_HELP') { if(typeof openHelp==='function') openHelp(); return; }
+    if (event.data.type !== 'MSAL_TOKEN') return;
+    if (window._portalToken) return;
+    window._portalToken = event.data.token;
+    window._portalEmail = event.data.email || '';
+    if (!window._appBooted && typeof boot==='function') boot();
+  });
 });
 
 </script>
@@ -1788,27 +1825,10 @@ if (document.readyState === 'loading') {
 }
 
 // ── HELP DRAWER ──────────────────────────────────────────
-function openHelp(){
-  document.getElementById('helpOverlay').classList.add('on');
-  document.getElementById('helpDrawer').classList.add('on');
-  document.body.style.overflow='hidden';
-}
-function closeHelp(){
-  document.getElementById('helpOverlay').classList.remove('on');
-  document.getElementById('helpDrawer').classList.remove('on');
-  document.body.style.overflow='';
-}
-function showHelpTab(id,btn){
-  document.querySelectorAll('.help-section').forEach(s=>s.classList.remove('active'));
-  document.querySelectorAll('.help-tab').forEach(t=>t.classList.remove('active'));
-  document.getElementById('help-'+id).classList.add('active');
-  btn.classList.add('active');
-}
+function openHelp(){document.getElementById('helpOverlay').classList.add('on');document.getElementById('helpDrawer').classList.add('on');document.body.style.overflow='hidden';}
+function closeHelp(){document.getElementById('helpOverlay').classList.remove('on');document.getElementById('helpDrawer').classList.remove('on');document.body.style.overflow='';}
+function showHelpTab(id,btn){document.querySelectorAll('.help-section').forEach(s=>s.classList.remove('active'));document.querySelectorAll('.help-tab').forEach(t=>t.classList.remove('active'));document.getElementById('help-'+id).classList.add('active');btn.classList.add('active');}
 document.addEventListener('keydown',function(e){if(e.key==='Escape')closeHelp();});
-window.addEventListener('message',function(event){
-  if(event.origin!=='https://lon-ka.github.io')return;
-  if(event.data&&event.data.type==='OPEN_HELP')openHelp();
-});
 document.addEventListener('DOMContentLoaded',function(){
   setTimeout(function(){
     var topR=document.querySelector('.topbar-r');
