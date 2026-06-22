@@ -339,9 +339,9 @@ class Zn{constructor(e,r){this.cacheOutcome=he,this.cacheManager=r,this.apiId=e.
 //  ⚙️ CONFIG — Vul hier jouw M365-gegevens in
 // ════════════════════════════════════════════════════════════════
 const CONFIG = {
-  clientId:     '481e8cb4-58ca-49b1-bb8b-5b02cbb45b4c',
-  tenantId:     '655d15e1-e5fc-4868-8462-8463dc0ff014',
-  siteId:       'londerwijs.sharepoint.com:/sites/BaO-Schooluitstappen',
+  clientId:     'b427a5ba-542f-4254-8ca0-5fa41b1d130a',
+  tenantId:     '165074eb-b8b7-49e8-a9b4-54cac7939ed2',
+  siteId:       'gebaskabe.sharepoint.com:/sites/BaOKA-Schooluitstappen',
   lijstIds: {
     uitstappen:   '1bd13971-b029-4993-8b36-43e8036470f4',
     gebruikers:   '0692fec8-715f-4ea3-939d-b94819e451ee',
@@ -407,7 +407,7 @@ const msalConfig = {
   auth: {
     clientId:    CONFIG.clientId,
     authority:   'https://login.microsoftonline.com/' + CONFIG.tenantId,
-    redirectUri: 'https://lon-ka.github.io/LON-Schooluitstappen/'
+    redirectUri: 'https://lon-ka.github.io/KA-Schooluitstappen/'
   },
   cache:  { cacheLocation: 'sessionStorage' },
   system: { allowRedirectInIframe: true }
