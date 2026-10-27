@@ -540,7 +540,7 @@ function fieldsToTrip(fields, spId) {
     maxfact:     fields.Maxfact || '',
     commOuders:  fields.CommOuders || 'Leerkracht',
     opmerking:   fields.Opmerking || '',
-    status:      fields.Status || 'aangevraagd',
+    status:      fields.AanvraagStatus || 'aangevraagd',
     aangemaakt:  fields.Aangemaakt || TODAY,
     typeUitstap:  fields.TypeUitstap  || 'dag',
     schooljaar:   fields.Schooljaar   || huidigSchooljaar(),
@@ -583,7 +583,7 @@ function tripToFields(trip) {
     Maxfact:        trip.maxfact,
     CommOuders:     trip.commOuders,
     Opmerking:      trip.opmerking,
-    Status:         trip.status,
+    AanvraagStatus: trip.status,
     Aangemaakt:     trip.aangemaakt,
     Tijdlijn:       JSON.stringify(trip.tl),
     TypeUitstap:    trip.typeUitstap   || 'dag',
@@ -1033,7 +1033,7 @@ function renderDashboard() {
   if (S.rol==='directie'&&cnt.a) html+='<div class="notice notice-warn">&#9888;&#65039; <strong>'+cnt.a+' uitstap'+(cnt.a>1?'pen':'')+'</strong> wacht'+(cnt.a>1?'en':'')+' op uw goedkeuring.</div>';
   if (S.rol==='secretariaat'&&cnt.co) html+='<div class="notice" style="background:#EDE9FE;border:1px solid #C4B5FD;color:#5B21B6">&#128203; <strong>'+cnt.co+' concept'+(cnt.co>1?'s':'')+'</strong> wacht'+(cnt.co>1?'en':'')+' op aanvulling en doorsturen.</div>';
   if (missingNums&&S.rol==='directie') html+='<div class="notice notice-todo">&#128222; Noodnummers zijn nog niet ingevuld. <button class="btn btn-ghost btn-sm" style="margin-left:8px" onclick="goSettings()">Invullen &#8594;</button></div>';
-  if (S.rol!=='directie') html+='<div style="display:flex;justify-content:flex-end;margin-bottom:16px"><button class="btn-fab" onclick="goCreate()">&#65291; Nieuwe uitstap</button></div>';
+  html+='<div style="display:flex;justify-content:flex-end;margin-bottom:16px"><button class="btn-fab" onclick="goCreate()">&#65291; Nieuwe uitstap</button></div>';
   // ── Budget widget ────────────────────────────────────────────────────────────
   html += '<div class="budget-card">';
   html += '<div class="budget-title">&#128200; Maximumfactuur bewaking</div>';
@@ -1518,7 +1518,7 @@ async function doApprove() {
     const newTl=[...t.tl,{l:'Goedgekeurd door directie'+(note?' \u2014 '+note:''),t:TODAY}];
     const updTrips = S.trips.map(x=>x.id!==S.selId?x:{...x,status:'goedgekeurd',tl:newTl});
     if (!isConfigured) { S.trips=updTrips; lsSaveTrips(S.school.naam, updTrips); }
-    else { await updateTripFields(t._spId, { Status:'goedgekeurd', Tijdlijn:JSON.stringify(newTl), Opmerking:t.opmerking }); S.trips=updTrips; }
+    else { await updateTripFields(t._spId, { AanvraagStatus:'goedgekeurd', Tijdlijn:JSON.stringify(newTl), Opmerking:t.opmerking }); S.trips=updTrips; }
     const updated=S.trips.find(x=>x.id===S.selId);
     S.saving=false; S.appView='dashboard'; render();
     toast('Uitstap goedgekeurd!','&#9989;');
@@ -1534,7 +1534,7 @@ async function doReject() {
     const newTl=[...t.tl,{l:'Afgekeurd door directie'+(note?' \u2014 '+note:''),t:TODAY}];
     const updTrips2 = S.trips.map(x=>x.id!==S.selId?x:{...x,status:'afgekeurd',opmerking:note||x.opmerking,tl:newTl});
     if (!isConfigured) { S.trips=updTrips2; lsSaveTrips(S.school.naam, updTrips2); }
-    else { await updateTripFields(t._spId, { Status:'afgekeurd', Opmerking:note||t.opmerking, Tijdlijn:JSON.stringify(newTl) }); S.trips=updTrips2; }
+    else { await updateTripFields(t._spId, { AanvraagStatus:'afgekeurd', Opmerking:note||t.opmerking, Tijdlijn:JSON.stringify(newTl) }); S.trips=updTrips2; }
     const updated=S.trips.find(x=>x.id===S.selId);
     S.saving=false; S.appView='dashboard'; render();
     toast('Uitstap afgekeurd.','&#10060;');
@@ -1553,7 +1553,7 @@ async function doSecretariaatIndienen() {
     const newTl=[...t.tl,{l:'Aangevuld en doorgestuurd door secretariaat',t:TODAY}];
     const updTrips = S.trips.map(x=>x.id!==S.selId?x:{...x,status:'aangevraagd',busprijs,bijdrageOC,maxfact,maat,tl:newTl});
     if (!isConfigured) { S.trips=updTrips; lsSaveTrips(S.school.naam, updTrips); }
-    else { await updateTripFields(t._spId,{Status:'aangevraagd',Busprijs:busprijs,BijdrageOC:bijdrageOC,Maxfact:maxfact,Busmaatschappij:maat,Tijdlijn:JSON.stringify(newTl)}); S.trips=updTrips; }
+    else { await updateTripFields(t._spId,{AanvraagStatus:'aangevraagd',Busprijs:busprijs,BijdrageOC:bijdrageOC,Maxfact:maxfact,Busmaatschappij:maat,Tijdlijn:JSON.stringify(newTl)}); S.trips=updTrips; }
     const updated=S.trips.find(x=>x.id===S.selId);
     S.saving=false; S.appView='dashboard'; render();
     toast('Doorgestuurd naar directie!','&#128203;');
